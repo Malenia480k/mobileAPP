@@ -10,13 +10,23 @@ import com.example.mobileapp_jetpack.data.Memo
 import com.example.mobileapp_jetpack.data.MemoRepository
 
 @Composable
-fun MemoEditScreen(navController: NavController, memoId: Long) {
-    val existingMemo = MemoRepository.getMemo(memoId)
+fun MemoEditScreen(
+    navController: NavController,
+    memoId: Long
+) {
+    val existingMemo = remember {
+        MemoRepository.getMemoById(memoId)
+    }
 
     var title by remember { mutableStateOf(existingMemo?.title ?: "") }
     var content by remember { mutableStateOf(existingMemo?.content ?: "") }
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
@@ -32,21 +42,27 @@ fun MemoEditScreen(navController: NavController, memoId: Long) {
             label = { Text("내용") },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .weight(1f)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-            if (existingMemo == null) {
-                MemoRepository.addMemo(Memo(title = title, content = content))
-            } else {
-                MemoRepository.updateMemo(
-                    existingMemo.copy(title = title, content = content)
+        Button(
+            onClick = {
+                val memo = Memo(
+                    id = existingMemo?.id ?: System.currentTimeMillis(),
+                    title = title,
+                    content = content,
+                    timestamp = existingMemo?.timestamp ?: System.currentTimeMillis(),
+                    isTrashed = false,
+                    trashedAt = null
                 )
-            }
-            navController.popBackStack()
-        }) {
+
+                MemoRepository.addOrUpdateMemo(memo)
+                navController.popBackStack()
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("저장")
         }
     }
